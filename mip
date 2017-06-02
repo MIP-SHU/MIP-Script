@@ -1,0 +1,107 @@
+#!/bin/bash
+helpInfo(){
+  echo 'please enter the param,the command format is:'
+  echo '=============================================='
+  echo './mip install'
+  echo './mip update'
+  echo './mip start'
+  echo './mip stop'
+  echo '=============================================='
+  echo 'if the permission deny ,please execute:'
+  echo 'chmod +x ./mip'
+}
+
+installAction(){
+  echo "installAction"
+  # set the mip main floder
+  mkdir ~/mipdev
+  cp jdk-8u131-linux-x64* ~/mipdev/
+  cd ~/mipdev
+
+  # set the jdk environment
+  tar zxvf jdk-8u131-linux-x64*
+  mv jdk1.8.0_131 jdk1.8
+  echo export JAVA_HOME=~/mipdev/jdk1.8 >> ~/.bashrc
+  echo export CLASSPATH=.:\$JAVA_HOME/lib:\$JAVA_HOME/jre/lib:\$CLASSPATH >> ~/.bashrc
+  echo export PATH=\$JAVA_HOME/bin:\$JAVA_HOME/jre/bin:\$PATH >> ~/.bashrc
+
+  sudo apt-get update
+  sudo apt-get install redis-server
+  sudo apt-get install git
+  sudo apt-get install maven
+
+  sudo apt-get install libreadline-dev libncurses5-dev libpcre3-dev \
+    libssl-dev perl make build-essential curl
+
+
+  # install the openresty
+  wget https://openresty.org/download/openresty-1.11.2.2.tar.gz
+  tar -zxvf openresty-1.11.2.2.tar.gz
+  cd openresty-1.11.2.2
+  ./configure --prefix=/opt/openresty \
+            --with-pcre-jit \
+            --with-ipv6 \
+            --without-http_redis2_module \
+            -j2
+  sudo make
+  sudo make install
+  cd ..
+
+  # pull the mip code
+  git clone https://github.com/zuston/MIP-Searching.git
+  cd MIP-Searching
+  mvn clean package
+  sudo git clone https://github.com/zuston/MIP-Block.git /opt/openresty/nginx
+  sudo git clone https://github.com/zuston/MIP-FrontEnd.git /opt/openresty/nginx/html
+}
+
+updateAction(){
+  echo "updateAction"
+  killall java
+  killall nginx
+  cd ~/mipdev/MIP-Searching
+  git pull
+  mvn clean package
+  nohup java -jar ./target/materialSpringBoot-1.0-SNAPSHOT.war & > /dev/null
+  cd /opt/openresty/nginx/MIP-Block
+  git pull
+  cd /opt/openresty/nginx/MIP-FrontEnd
+  git pull
+  cd /opt/openresty/nginx/sbin
+  sudo ./nginx -c MIP-Block/conf/nginx.conf
+}
+
+startAction(){
+  echo "startAction"
+  sudo service redis-server start
+  cd /opt/openresty/nginx/sbin
+  killall nginx
+  sudo ./nginx -c MIP-Block/conf/nginx.conf
+  cd ~/mipdev/MIP-Searching/target
+  nohup java -jar materialSpringBoot-1.0-SNAPSHOT.war & > /dev/null
+}
+stopAction(){
+  echo "stopAction"
+  sudo service redis-server stop
+  killall nginx
+  killall java
+}
+
+if [ x$1 = x ]; then
+  #statements
+  helpInfo
+else
+  if [ "$1" = "install" ]; then
+    #statements
+    installAction
+  elif [ "$1" = "update" ]; then
+    #statements
+    updateAction
+  elif [ "$1" = "start" ]; then
+    startAction
+  elif [ "$1" = "stop" ]; then
+    stopAction
+  else
+    helpInfo
+  fi
+fi
