@@ -1,0 +1,21 @@
+#!/bin/bash
+
+cd /home/nova/MIP-JAVA-V2
+
+ps -ef | grep materialSpringBoot-1.0-SNAPSHOT.war | grep -v grep | awk '{print $2}' | xargs kill
+
+nohup java -jar materialSpringBoot-1.0-SNAPSHOT.war &
+
+killall nginx
+
+cd /opt/openresty/nginx/sbin
+
+sudo ./nginx -c mip-block/conf/nginx.conf
+
+cd /opt/verynginx/openresty/nginx/sbin
+
+sudo ./nginx -c tiny-firewall/serverApp/conf/nginx.conf
+
+
+
+
