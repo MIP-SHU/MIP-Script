@@ -1,12 +1,16 @@
 #!/bin/bash
 
+cd /home/nova/mytest/redis-3.2.8/src
+
+nohup ./redis-server &
+
 cd /home/nova/MIP-JAVA-V2
 
 ps -ef | grep materialSpringBoot-1.0-SNAPSHOT.war | grep -v grep | awk '{print $2}' | xargs kill
 
 nohup java -jar materialSpringBoot-1.0-SNAPSHOT.war &
 
-killall nginx
+sudo killall nginx
 
 cd /opt/openresty/nginx/sbin
 
