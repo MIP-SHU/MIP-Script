@@ -57,7 +57,7 @@ installAction(){
 
 updateAction(){
   echo "updateAction"
-  killall java
+  ps -ef | grep materialSpringBoot-1.0-SNAPSHOT.war | grep -v grep | xargs -I {} kill {}
   killall nginx
   cd ~/mipdev/MIP-Searching
   git pull
@@ -84,7 +84,7 @@ stopAction(){
   echo "stopAction"
   sudo service redis-server stop
   killall nginx
-  killall java
+  ps -ef | grep materialSpringBoot-1.0-SNAPSHOT.war | grep -v grep | xargs -I {} kill {}
 }
 
 if [ x$1 = x ]; then
